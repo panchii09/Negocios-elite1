@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión Semanal de Negocios</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f9;
+            color: #333;
+        }
+
+        header {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        main {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #4CAF50;
+        }
+
+        form {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input, select, button {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+
+        table thead {
+            background: #4CAF50;
+            color: white;
+        }
+
+        table th, table td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tbody tr:hover {
+            background: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gestión Semanal de Negocios</h1>
+    </header>
+    <main>
+        <h2>Registrar horas en tu negocio</h2>
+        <form id="businessForm">
+            <label for="name">Tu Nombre:</label>
+            <input type="text" id="name" placeholder="Ingresa tu nombre" required>
+
+            <label for="business">Negocio:</label>
+            <select id="business" required>
+                <option value="">Selecciona un negocio</option>
+                <option value="Armeria Don Oscar">Armeria Don Oscar</option>
+                <option value="Farmacia de Guardia">Farmacia de Guardia</option>
+                <option value="Vanilla">Vanilla</option>
+                <option value="Weed Center">Weed Center</option>
+                <option value="Benyys">Benyys</option>
+                <option value="Bahamas">Bahamas</option>
+                <option value="Farmacia Norte">Farmacia Norte</option>
+                <option value="Armeria Ciudad">Armeria Ciudad</option>
+                <option value="Weed Green Posion">Weed Green Posion</option>
+            </select>
+
+            <label for="hours">Horas abiertas:</label>
+            <input type="number" id="hours" min="0" placeholder="Ejemplo: 3" required>
+
+            <label for="minutes">Minutos abiertos:</label>
+            <input type="number" id="minutes" min="0" max="59" placeholder="Ejemplo: 30" required>
+
+            <button type="button" onclick="addBusinessData()">Añadir</button>
+        </form>
+
+        <h2>Resumen semanal</h2>
+        <table id="summaryTable">
+            <thead>
+                <tr>
+                    <th>Negocio</th>
+                    <th>Horas Totales</th>
+                    <th>Minutos Totales</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h2>Reiniciar datos</h2>
+        <p>Introduce la clave para habilitar el botón:</p>
+        <input type="password" id="adminKey" placeholder="Clave de administrador">
+        <button id="resetButton" disabled onclick="resetBusinessData()">Reiniciar Horas y Minutos</button>
+    </main>
+
+    <script>
+        const businesses = [
+            "Armeria Don Oscar",
+            "Farmacia de Guardia",
+            "Vanilla",
+            "Weed Center",
+            "Benyys",
+            "Bahamas",
+            "Farmacia Norte",
+            "Armeria Ciudad",
+            "Weed Green Posion"
+        ];
+
+        const adminPassword = "12345"; // Cambia esta clave a una más segura.
+
+        function initializeStorage() {
+            if (!localStorage.getItem("businessData")) {
+                const initialData = {};
+                businesses.forEach(business => {
+                    initialData[business] = { hours: 0, minutes: 0 };
+                });
+                localStorage.setItem("businessData", JSON.stringify(initialData));
+                localStorage.setItem("lastReset", new Date().toISOString());
+            }
+        }
+
+        function resetWeeklyData() {
+            const lastReset = new Date(localStorage.getItem("lastReset"));
+            const now = new Date();
+            if (now.getDay() === 0 && now - lastReset > 6 * 24 * 60 * 60 * 1000) {
+                initializeStorage();
+                localStorage.setItem("lastReset", now.toISOString());
+                alert("Datos semanales reiniciados.");
+            }
+        }
+
+        function addBusinessData() {
+            const name = document.getElementById("name").value.trim();
+            const business = document.getElementById("business").value;
+            const hours = parseInt(document.getElementById("hours").value, 10);
+            const minutes = parseInt(document.getElementById("minutes").value, 10);
+
+            if (!name || !business || isNaN(hours) || isNaN(minutes)) {
+                alert("Por favor, completa todos los campos.");
+                return;
+            }
+
+            const data = JSON.parse(localStorage.getItem("businessData"));
+            data[business].hours += hours;
+            data[business].minutes += minutes;
+
+            if (data[business].minutes >= 60) {
+                data[business].hours += Math.floor(data[business].minutes / 60);
+                data[business].minutes %= 60;
+            }
+
+            localStorage.setItem("businessData", JSON.stringify(data));
+            updateTable();
+        }
+
+        function updateTable() {
+            const data = JSON.parse(localStorage.getItem("businessData"));
+            const tableBody = document.getElementById("summaryTable").querySelector("tbody");
+            tableBody.innerHTML = "";
+
+            businesses.forEach(business => {
+                const row = `
+                    <tr>
+                        <td>${business}</td>
+                        <td>${data[business].hours}</td>
+                        <td>${data[business].minutes}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // Habilitar botón si la clave es correcta
+        document.getElementById("adminKey").addEventListener("input", function () {
+            const key = this.value;
+            const resetButton = document.getElementById("resetButton");
+            if (key === adminPassword) {
+                resetButton.disabled = false;
+            } else {
+                resetButton.disabled = true;
+            }
+        });
+
+        function resetBusinessData() {
+            const initialData = {};
+            businesses.forEach(business => {
+                initialData[business] = { hours: 0, minutes: 0 };
+            });
+            localStorage.setItem("businessData", JSON.stringify(initialData));
+            alert("¡Todos los datos han sido reiniciados!");
+            location.reload(); // Actualizar la página para mostrar los cambios
+        }
+
+        window.onload = function() {
+            initializeStorage();
+            resetWeeklyData();
+            updateTable();
+        };
+    </script>
+</body>
+</html>
